@@ -1,0 +1,72 @@
+{
+  "radar_config": {
+    "name": "Trending Radar",
+    "description": "Catch viral repos before they go mainstream"
+  },
+  "github_search_queries": [
+    {
+      "name": "🔥 BROAD SWEEP - All Viral",
+      "query": "created:>%s stars:>500",
+      "min_stars": 500,
+      "relevance_keywords": ["ai", "agent", "llm", "code", "terminal", "claude", "cursor", "local", "self-hosted", "reverse", "mythos", "architecture"]
+    },
+    {
+      "name": "New AI Agents",
+      "query": "created:>%s agent ai assistant llm stars:>100",
+      "min_stars": 100,
+      "relevance_keywords": ["agent", "coding", "assistant", "llm", "local", "cli", "terminal"]
+    },
+    {
+      "name": "Hot Coding Tools",
+      "query": "pushed:>%s code editor ide cursor claude stars:>200",
+      "min_stars": 200,
+      "relevance_keywords": ["code", "editor", "cursor", "claude", "copilot", "ide"]
+    },
+    {
+      "name": "Local AI / Self-Hosted",
+      "query": "pushed:>%s local llm ollama self-hosted privacy stars:>100",
+      "min_stars": 100,
+      "relevance_keywords": ["local", "ollama", "privacy", "self-hosted", "offline"]
+    },
+    {
+      "name": "Terminal / CLI AI",
+      "query": "pushed:>%s terminal cli tui ai assistant stars:>50",
+      "min_stars": 50,
+      "relevance_keywords": ["terminal", "cli", "tui", "shell"]
+    },
+    {
+      "name": "Reverse Engineering / Security",
+      "query": "pushed:>%s reverse engineering decompile security audit stars:>50",
+      "min_stars": 50,
+      "relevance_keywords": ["reverse", "decompile", "audit", "security", "mythos", "reconstruction"]
+    }
+  ],
+  "external_sources": {
+    "hackernews_show": {
+      "url": "https://hn.algolia.com/api/v1/search_by_date?tags=show_hn&hitsPerPage=30",
+      "relevance_keywords": ["ai", "agent", "llm", "coding", "terminal", "open source", "self-hosted"]
+    },
+    "reddit_selfhosted": {
+      "url": "https://www.reddit.com/r/selfhosted/hot.json?limit=25",
+      "relevance_keywords": ["ai", "agent", "llm", "assistant", "local", "self-hosted"]
+    }
+  },
+  "filters": {
+    "exclude_forks": true,
+    "exclude_archived": true,
+    "min_stars_velocity_per_day": 20,
+    "max_age_days": 30,
+    "exclude_patterns": [
+      "tutorial",
+      "course",
+      "examples",
+      "awesome-list",
+      "curated"
+    ]
+  },
+  "output": {
+    "max_results_per_query": 10,
+    "min_total_score": 50,
+    "highlight_threshold": 500
+  }
+}

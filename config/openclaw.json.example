@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.4.1",
+    "lastTouchedAt": "TEMPLATE"
+  },
+  "endpoints": {
+    "ollama": {
+      "url": "http://localhost:11434",
+      "defaultModel": "gemma4:2b"
+    },
+    "deepseek": {
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "model": "deepseek-chat"
+    }
+  },
+  "agents": {
+    "coding": { "model": "gemma4:2b", "provider": "ollama" },
+    "main": { "model": "deepseek-chat", "provider": "deepseek" },
+    "school": { "model": "gemma4:2b", "provider": "ollama" }
+  },
+  "secrets": {
+    "apiKeys": {
+      "kimi": "${KIMI_API_KEY}",
+      "deepseek": "${DEEPSEEK_API_KEY}",
+      "openrouter": "${OPENROUTER_API_KEY}"
+    }
+  }
+}

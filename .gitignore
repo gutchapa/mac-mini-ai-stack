@@ -1,0 +1,45 @@
+# OS
+.DS_Store
+.AppleDouble
+Icon?
+._*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+.pnpm-store/
+
+# ML Models (too large, download not commit)
+*.gguf
+*.safetensors
+*.bin
+*.onnx
+*.pt
+*.pth
+
+# Local state (never commit)
+sessions/
+token/
+exec-approvals.json
+paired.json
+device-auth.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temp
+temp_*
+*.log

@@ -1,0 +1,378 @@
+Here is a complete, standalone HTML page that fulfills all the requirements. It uses HTML, CSS, and JavaScript to handle the form, data display, and receipt generation client-side.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Fee Receipt Generator</title>
+    <style>
+        /* --- CSS Styling --- */
+        :root {
+            --navy: #000080;
+            --gold: #FFD700;
+            --light-bg: #f4f4f4;
+            --text-dark: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            margin: 20px;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--navy);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Form Styling */
+        .input-section, .button-group {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="date"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        #addEntryBtn {
+            background-color: var(--navy);
+            color: white;
+        }
+
+        #addEntryBtn:hover {
+            background-color: #000066;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        #generateReceiptBtn, #printBtn {
+            background-color: var(--gold);
+            color: var(--navy);
+            flex-grow: 1;
+        }
+
+        #generateReceiptBtn:hover, #printBtn:hover {
+            background-color: #e0c000;
+        }
+
+        /* Table Styling */
+        #feeTableContainer {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--navy);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Receipt Styling (Print View) */
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+            }
+            h1 {
+                color: var(--navy);
+            }
+            .no-print {
+                display: none !important;
+            }
+            .receipt-header {
+                border-bottom: 2px solid var(--gold);
+                padding-bottom: 5px;
+                margin-bottom: 15px;
+            }
+            .receipt-detail {
+                margin-bottom: 10px;
+            }
+            .receipt-footer {
+                margin-top: 30px;
+                text-align: center;
+            }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+            .action-buttons button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+</head>
+<body>
+
+    <div class="container">
+        <h1>School Fee Receipt Generator</h1>
+
+        <!-- 1. Fee Entry Form -->
+        <div class="input-section">
+            <h2>Add Fee Entry</h2>
+            <div class="form-group">
+                <label for="studentName">Student Name:</label>
+                <input type="text" id="studentName" required>
+            </div>
+            <div class="form-group">
+                <label for="classSection">Class/Section:</label>
+                <input type="text" id="classSection" required>
+            </div>
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="form-group">
+                <label for="feeDescription">Fee Description:</label>
+                <select id="feeDescription" required>
+                    <option value="">-- Select a Fee Type --</option>
+                    <option value="Tuition">Tuition</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Library">Library</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Lab">Lab</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount (INR):</label>
+                <input type="number" id="amount" step="0.01" min="0" required>
+            </div>
+            <button id="addEntryBtn">Add to Receipt</button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button id="generateReceiptBtn">Generate Receipt</button>
+            <button id="printBtn">Print Receipt</button>
+        </div>
+
+        <!-- 3. Fee Entry Table -->
+        <h2>Fee Entries</h2>
+        <div id="feeTableContainer">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Amount (INR)</th>
+                    </tr>
+                </thead>
+                <tbody id="feeTableBody">
+                    <!-- Entries will be added here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let feeEntries = [];
+        let entryCount = 0;
+
+        // --- DOM Elements ---
+        const addEntryBtn = document.getElementById('addEntryBtn');
+        const generateReceiptBtn = document.getElementById('generateReceiptBtn');
+        const printBtn = document.getElementById('printBtn');
+        const feeTableBody = document.getElementById('feeTableBody');
+
+        // --- Event Listeners ---
+
+        addEntryBtn.addEventListener('click', addFeeEntry);
+        generateReceiptBtn.addEventListener('click', generateReceipt);
+        printBtn.addEventListener('click', () => window.print());
+
+        // --- Functions ---
+
+        function addFeeEntry() {
+            const name = document.getElementById('studentName').value;
+            const section = document.getElementById('classSection').value;
+            const date = document.getElementById('date').value;
+            const description = document.getElementById('feeDescription').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (!name || !section || !date || !description || isNaN(amount) || amount <= 0) {
+                alert("Please fill in all fields correctly.");
+                return;
+            }
+
+            const newEntry = {
+                id: entryCount + 1,
+                name: name,
+                section: section,
+                date: date,
+                description: description,
+                amount: amount
+            };
+
+            feeEntries.push(newEntry);
+            renderTable();
+            
+            // Clear form fields (optional, but good UX)
+            document.getElementById('amount').value = '';
+            document.getElementById('feeDescription').value = '';
+            entryCount++;
+        }
+
+        function renderTable() {
+            feeTableBody.innerHTML = ''; // Clear existing rows
+
+            if (feeEntries.length === 0) {
+                feeTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No entries added yet.</td></tr>';
+                return;
+            }
+
+            feeEntries.forEach(entry => {
+                const row = feeTableBody.insertRow();
+                row.insertCell(0).textContent = entry.id;
+                row.insertCell(1).textContent = entry.description;
+                row.insertCell(2).textContent = entry.amount.toFixed(2);
+            });
+        }
+
+        function generateReceipt() {
+            if (feeEntries.length === 0) {
+                alert("Please add fee entries before generating a receipt.");
+                return;
+            }
+
+            // 1. Calculate Total
+            const totalAmount = feeEntries.reduce((sum, entry) => sum + entry.amount, 0);
+
+            // 2. Generate Receipt HTML
+            let receiptHTML = `
+                <div style="border: 1px solid #ccc; padding: 20px; font-family: Arial, sans-serif;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="color: var(--navy);">Gutchapa Academy</h2>
+                        <div style="border-bottom: 2px solid var(--gold); margin: 5px 0;"></div>
+                    </div>
+
+                    <div class="receipt-detail">
+                        <strong>Student Name:</strong> ${feeEntries[0].name} <br>
+                        <strong>Class/Section:</strong> ${feeEntries[0].section} <br>
+                        <strong>Issue Date:</strong> ${new Date().toLocaleDateString()} <br>
+                        <strong>Receipt No:</strong> REC-${String(Math.floor(Math.random() * 9000) + 1000).toString().padStart(4, '0')}}
+                    </div>
+
+                    <h3 style="margin-top: 20px; border-bottom: 1px solid #eee;">Fee Details</h3>
+            `;
+
+            // 3. List Entries
+            feeEntries.forEach(entry => {
+                receiptHTML += `
+                    <div class="receipt-detail">
+                        <strong>${entry.description}:</strong> ${entry.amount.toFixed(2)} INR
+                    </div>
+                `;
+            });
+
+            // 4. Total
+            receiptHTML += `
+                    <div style="margin-top: 20px; padding-top: 10px; border-top: 2px dashed var(--navy);">
+                        <h3 style="text-align: right;">TOTAL AMOUNT: ${totalAmount.toFixed(2)} INR</h3>
+                    </div>
+                </div>
+            `;
+
+            // 5. Display Receipt (using a temporary window for printing)
+            const receiptWindow = window.open('', '_blank');
+            receiptWindow.document.write(`
+                <html>
+                <head>
+                    <title>Fee Receipt</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 30px; }
+                        h2 { color: navy; }
+                        .receipt-header { border-bottom: 2px solid gold; padding-bottom: 5px; margin-bottom: 15px; }
+                        .receipt-detail { margin-bottom: 10px; }
+                    </style>
+                </head>
+                <body>
+                    ${receiptHTML}
+                </body>
+                </html>
+            `);
+            receiptWindow.document.close();
+            receiptWindow.focus();
+        }
+
+        // Initialize the table on load
+        renderTable();
+    </script>
+
+</body>
+</html>
+```

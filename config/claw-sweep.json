@@ -1,0 +1,17 @@
+{
+  "repos": [],
+  "local_repos": [
+    {"path": "~/.openclaw", "label": "OpenClaw Config"}
+  ],
+  "target_repos": [
+    {"owner": "openclaw", "name": "openclaw", "label": "OpenClaw Core"}
+  ],
+  "deepseek_model": "deepseek-v4-flash",
+  "deepseek_max_tokens": 1024,
+  "review_policy": "Conservative: only propose close for: implemented on main, cannot reproduce, duplicate, stale+insufficient info, or incoherent.",
+  "protected_labels": ["security", "beta-blocker", "release-blocker", "maintainer"],
+  "stale_days": 60,
+  "min_confidence_to_close": "high",
+  "github_token_env": "GITHUB_TOKEN",
+  "max_items_per_repo": 5
+}

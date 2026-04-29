@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Admin Task Manager</title>
+    <style>
+        /* --- Global Styles & Theme (Navy & Gold) --- */
+        :root {
+            --navy: #001f3f;
+            --gold: #ffc72c;
+            --light-gold: #ffeb99;
+            --white: #ffffff;
+            --gray-light: #f4f4f9;
+            --gray-dark: #333;
+            --danger: #dc3545;
+            --success: #28a745;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--gray-light);
+            color: var(--gray-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Layout Structure --- */
+        #sidebar {
+            width: 250px;
+            background-color: var(--navy);
+            color: var(--white);
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* --- Header & Branding --- */
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--gold);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* --- Navigation & Role Selection --- */
+        .nav-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: none;
+            border: none;
+            color: var(--white);
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            font-size: 1em;
+        }
+
+        .nav-button:hover, .nav-button.active {
+            background-color: rgba(255, 199, 44, 0.2);
+            color: var(--gold);
+        }
+
+        /* --- Forms & Inputs --- */
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--navy);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #003366;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        /* --- Task List & Cards --- */
+        #task-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .task-card {
+            background: var(--white);
+            border-left: 5px solid var(--gold);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-card h3 {
+            margin-top: 0;
+            color: var(--navy);
+            font-size: 1.3em;
+        }
+
+        .task-card p {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .priority-high { color: var(--danger); font-weight: bold; }
+        .priority-medium { color: orange; }
+        .priority-low { color: var(--success); }
+
+        .status-pending { border-left-color: #ccc; }
+        .status-in_progress { border-left-color: orange; }
+        .status-completed { border-left-color: var(--success); }
+        .status-blocked { border-left-color: var(--danger); }
+
+        /* --- Dashboard & Stats --- */
+        #dashboard-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background-color: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid var(--gold);
+        }
+
+        .stat-box h2 {
+            font-size: 2.5em;
+            color: var(--navy);
+            margin: 0;
+        }
+
+        .stat-box p {
+            margin: 5px 0 0 0;
+            font-size: 1em;
+            color: #666;
+        }
+
+        /* --- Modals & Overlays --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- Notifications --- */
+        #notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            width: 300px;
+        }
+
+        .notification {
+            background-color: var(--navy);
+            color: var(--white);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.overdue {
+            border-left: 5px solid var(--danger);
+        }
+
+        /* --- Staff View Specifics --- */
+        .staff-controls {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+        }
+        .staff-controls select, .staff-controls textarea {
+            margin-bottom: 10px;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            #sidebar {
+                width: 100%;
+                height: auto;
+                padding: 10px;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+            }
+            #main-content {
+                padding: 20px;
+            }
+            #dashboard-stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div id="sidebar">
+        <div class="logo">SchoolTaskPro</div>
+        <button class="nav-button active" onclick="showView('dashboard')">📊 Dashboard</button>
+        <button class="nav-button" onclick="showView('create')">➕ Create Task</button>
+        <button class="nav-button" onclick="showView('tasks')">📋 All Tasks</button>
+        <button class="nav-button" onclick="showRoleSelector()">👤 Role Selector</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="main-content">
+        
+        <!-- Role Selector Modal (Initial View) -->
+        <div id="role-selector-modal" class="modal-overlay" style="display: flex;">
+            <div class="modal-content">
+                <h2>Select Your Role</h2>
+                <p>Please choose whether you are an Administrator or a Staff Member to begin.</p>
+                <button onclick="setRole('admin')" style="background-color: var(--navy); margin-right: 10px;">Admin</button>
+                <button onclick="setRole('staff')" style="background-color: var(--success);">Staff</button>
+            </div>
+        </div>
+
+        <!-- 1. Dashboard View -->
+        <div id="view-dashboard" class="view-section" style="display: none;">
+            <h1>Admin Dashboard Overview</h1>
+            
+            <div id="notifications">
+                <!-- Notifications will appear here -->
+            </div>
+
+            <div id="dashboard-stats">
+                <div class="stat-box">
+                    <h2 id="stat-total">0</h2>
+                    <p>Total Tasks</p>
+                </div>
+                <div class="stat-box">
+                    <h2 id="stat-pending">0</h2>
+                    <p>Pending</p>
+                </div>
+                <div class="stat-box">
+                    <h2 id="stat-in_progress">0</h2>
+                    <p>In Progress</p>
+                </div>
+                <div class="stat-box">
+                    <h2 id="stat-overdue">0</h2>
+                    <p>Overdue Tasks 🚨</p>
+                </div>
+            </div>
+
+            <h2>Tasks by Assignee</h2>
+            <div id="assignee-breakdown" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px;">
+                <!-- Assignee breakdown cards go here -->
+            </div>
+        </div>
+
+        <!-- 2. Task Creation View (Admin/Staff) -->
+        <div id="view-create" class="view-section" style="display: none;">
+            <h1>➕ Create New Task</h1>
+            <form id="task-form">
+                <label for="task-title">Title:</label>
+                <input type="text" id="task-title" required>
+
+                <label for="task-description">Description:</label>
+                <textarea id="task-description" rows="4" required></textarea>
+
+                <label for="task-priority">Priority:</label>
+                <select id="task-priority" required>
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+
+                <label for="task-assignee">Assignee:</label>
+                <select id="task-assignee" required>
+                    <option value="Admin">Admin (Self)</option>
+                    <option value="Staff A">Staff A</option>
+                    <option value="Staff B">Staff B</option>
+                    <option value="Staff C">Staff C</option>
+                </select>
+
+                <label for="task-deadline">Deadline:</label>
+                <input type="date" id="task-deadline" required>
+
+                <button type="submit">Create Task</button>
+            </form>
+        </div>
+
+        <!-- 3. All Tasks View (Admin/Staff) -->
+        <div id="view-tasks" class="view-section" style="display: none;">
+            <h1>📋 All Tasks</h1>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <input type="text" id="task-search" placeholder="Search by title or description...">
+                <select id="task-filter-status">
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="blocked">Blocked</option>
+                </select>
+                <button onclick="applyFilters()">Apply Filters</button>
+            </div>
+
+            <div id="task-list">
+                <!-- Task cards will be rendered here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Task Detail/Edit Modal -->
+    <div id="task-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-title">Task Details</h2>
+            <div id="modal-body">
+                <!-- Task details and controls injected here -->
+            </div>
+            <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+                <button onclick="closeModal()">Close</button>
+                <button id="modal-save-btn" onclick="saveTaskChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =================================================================
+        // GLOBAL STATE MANAGEMENT
+        // =================================================================
+        let tasks = [];
+        let currentUserRole = null; // 'admin' or 'staff'
+        let currentView = 'dashboard';
+        let activeTaskId = null;
+
+        const STORAGE_KEY = 'schoolTaskProData';
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTasks();
+            // Show role selector immediately on load
+            document.getElementById('role-selector-modal').style.display = 'flex';
+        });
+
+        function loadTasks() {
+            const storedTasks = localStorage.getItem(STORAGE_KEY);
+            if (storedTasks) {
+                tasks = JSON.parse(storedTasks);
+            } else {
+                // Seed data for testing
+                tasks = [
+                    { id: Date.now() + 1, title: "Review Q3 Budget", description: "Review financial reports for the third quarter.", priority: "high", assignee: "Admin", deadline: getFutureDate(3), status: "pending", comments: [{ user: "Admin", text: "Needs immediate attention." }], deleted: false },
+                    { id: Date.now() + 2, title: "Update Library Catalog", description: "Add new books received in October.", priority: "medium", assignee: "Staff A", deadline: getFutureDate(7), status: "in_progress", comments: [{ user: "Staff A", text: "Started cataloging the new arrivals." }], deleted: false },
+                    { id: Date.now() + 3, title: "Fix Classroom Projector", description: "Projector in Room 101 is flickering.", priority: "high", assignee: "Staff B", deadline: getFutureDate(1), status: "pending", comments: [], deleted: false },
+                    { id: Date.now() + 4, title: "Parent Meeting Prep", description: "Prepare slides and agenda for parent-teacher night.", priority: "low", assignee: "Staff C", deadline: getPastDate(), status: "completed", comments: [], deleted: false }
+                ];
+                saveTasks();
+            }
+            checkNotifications();
+        }
+
+        function saveTasks() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+
+        // --- Utility Functions ---
+        function getFutureDate(days) {
+            const d = new Date();
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+        function getPastDate() {
+            const d = new Date();
+            d.setDate(d.getDate() - 5);
+            return d.toISOString().split('T')[0];
+        }
+
+        // =================================================================
+        // ROLE MANAGEMENT & VIEW SWITCHING
+        // =================================================================
+
+        function showRoleSelector() {
+            document.getElementById('role-selector-modal').style.display = 'flex';
+        }
+
+        function setRole(role) {
+            currentUserRole = role;
+            document.getElementById('role-selector-modal').style.display = 'none';
+            
+            // Hide the selector and show the main dashboard
+            document.getElementById('view-dashboard').style.display = 'block';
+            document.getElementById('view-create').style.display = 'none';
+            document.getElementById('view-tasks').style.display = 'none';
+            
+            // Update navigation buttons to reflect role
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.onclick = () => showView(btn.innerText.includes('Dashboard') ? 'dashboard' : btn.innerText.includes('Create') ? 'create' : btn.innerText.includes('All Tasks') ? 'tasks' : null);
+            });
+
+            // Initial render based on role
+            if (role === 'staff') {
+                showView('tasks'); // Staff usually starts by seeing their tasks
+            } else {
+                showView('dashboard');
+            }
+            
+            renderTasks();
+            updateDashboard();
+        }
+
+        function showView(viewName) {
+            if (!currentUserRole) {
+                alert("Please select your role first.");
+                return;
+            }
+
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(view => {
+                view.style.display = 'none';
+            });
+
+            // Show the selected view
+            document.getElementById(`view-${viewName}`).style.display = 'block';
+            currentView = viewName;
+
+            // Update active button styling
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.innerText.includes(viewName.charAt(0).toUpperCase() + viewName.slice(1))) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Re-render content specific to the view
+            if (viewName === 'tasks') {
+                renderTasks();
+            } else if (viewName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        // =================================================================
+        // TASK CRUD OPERATIONS
+        // =================================================================
+
+        // --- CREATE ---
+        document.getElementById('task-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newTask = {
+                id: Date.now(),
+                title: document.getElementById('task-title').value,
+                description: document.getElementById('task-description').value,
+                priority: document.getElementById('task-priority').value,
+                assignee: document.getElementById('task-assignee').value,
+                deadline: document.getElementById('task-deadline').value,
+                status: 'pending',
+                comments: [],
+                deleted: false
+            };
+
+            tasks.push(newTask);
+            saveTasks();
+            alert("Task created successfully!");
+            this.reset();
+            showView('tasks');
+            updateDashboard();
+        });
+
+        // --- READ/VIEW (Modal) ---
+        function openTaskModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            activeTaskId = taskId;
+            const modal = document.getElementById('task-modal');
+            const modalBody = document.getElementById('modal-body');
+            
+            // Determine if the user has edit/comment rights
+            const canEdit = currentUserRole === 'admin' || task.assignee === (currentUserRole === 'staff' ? 'Staff A' : 'Admin'); // Simplified check
+            const canComment = currentUserRole === 'staff' || currentUserRole === 'admin';
+
+            let commentsHtml = task.comments.map(c => 
+                `<p style="border-left: 3px solid var(--gold); padding-left: 10px; margin-bottom: 10px;"><strong>${c.user}:</strong> ${c.text}</p>`
+            ).join('');
+
+            modalBody.innerHTML = `
+                <h3>${task.title}</h3>
+                <p><strong>Description:</strong> ${task.description}</p>
+                <p><strong>Priority:</strong> <span class="priority-${task.priority}">${task.priority.toUpperCase()}</span></p>
+                <p><strong>Assigned To:</strong> ${task.assignee}</p>
+                <p><strong>Deadline:</strong> ${task.deadline}</p>
+                <p><strong>Status:</strong> <span class="status-${task.status}">${task.status.toUpperCase().replace('_', ' ')}</span></p>
+                
+                <div class="staff-controls">
+                    <h4>Task History & Comments</h4>
+                    <div id="task-comments">${commentsHtml}</div>
+                    
+                    <div id="comment-input-area" style="display: ${canComment ? 'block' : 'none'}; margin-top: 15px;">
+                        <textarea id="new-comment-text" rows="3" placeholder="Add a comment..."></textarea>
+                        <button onclick="addComment()">Add Comment</button>
+                    </div>
+                </div>
+
+                <div class="staff-controls" style="margin-top: 20px; border-top: 1px solid #eee;">
+                    <h4>Task Actions</h4>
+                    ${canEdit ? `
+                        <label for="modal-status">Update Status:</label>
+                        <select id="modal-status">
+                            <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="in_progress" ${task.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="blocked" ${task.status === 'blocked' ? 'selected' : ''}>Blocked</option>
+                        </select>
+                        
+                        <label for="modal-assignee">Reassign To:</label>
+                        <select id="modal-assignee">
+                            <option value="Admin" ${task.assignee === 'Admin' ? 'selected' : ''}>Admin</option>
+                            <option value="Staff A" ${task.assignee === 'Staff A' ? 'selected' : ''}>Staff A</option>
+                            <option value="Staff B" ${task.assignee === 'Staff B' ? 'selected' : ''}>Staff B</option>
+                            <option value="Staff C" ${task.assignee === 'Staff C' ? 'selected' : ''}>Staff C</option>
+                        </select>
+                        
+                        <label for="modal-deadline">Change Deadline:</label>
+                        <input type="date" id="modal-deadline" value="${task.deadline}">
+                    ` : '<p><em>(Admin access required for editing)</em></p>'}
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('task-modal').style.display = 'none';
+            activeTaskId = null;
+        }
+
+        function saveTaskChanges() {
+            if (!activeTaskId) return;
+            const taskIndex = tasks.findIndex(t => t.id === activeTaskId);
+            if (taskIndex === -1) return;
+
+            const task = tasks[taskIndex];
+            
+            // 1. Status Update
+            const newStatus = document.getElementById('modal-status').value;
+            task.status = newStatus;
+
+            // 2. Reassignment
+            const newAssignee = document.getElementById('modal-assignee').value;
+            task.assignee = newAssignee;
+
+            // 3. Deadline Change
+            const newDeadline = document.getElementById('modal-deadline').value;
+            task.deadline = newDeadline;
+
+            // Log changes as a comment
+            const changeLog = `Task status changed to ${newStatus.toUpperCase()}. Assigned to: ${newAssignee}. Deadline: ${newDeadline}.`;
+            task.comments.push({ user: currentUserRole === 'admin' ? 'Admin' : 'Staff', text: changeLog });
+
+            saveTasks();
+            updateDashboard();
+            renderTasks();
+            alert("Task updated successfully!");
+            closeModal();
+        }
+
+        function addComment() {
+            if (!activeTaskId) return;
+            const commentText = document.getElementById('new-comment-text').value.trim();
+            if (!commentText) return;
+
+            const task = tasks.find(t => t.id === activeTaskId);
+            if (task) {
+                task.comments.push({ user: currentUserRole === 'admin' ? 'Admin' : 'Staff', text: commentText });
+                saveTasks();
+                renderTasks(); // Re-render to show the new comment
+                document.getElementById('new-comment-text').value = '';
+            }
+        }
+
+        // --- DELETE ---
+        function deleteTask(taskId) {
+            if (!confirm("Are you sure you want to delete this task? Please provide a reason.")) {
+                return;
+            }
+            const reason = prompt("Please enter the reason for deletion:");
+            if (!reason) return;
+
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+                const deletedTask = tasks[taskIndex];
+                
+                // Log deletion reason
+                deletedTask.comments.push({ user: 'Admin', text: `TASK DELETED: ${reason}` });
+                
+                // Soft delete (for history)
+                tasks[taskIndex].deleted = true;
+                
+                saveTasks();
+                updateDashboard();
+                renderTasks();
+                alert(`Task "${deletedTask.title}" marked as deleted.`);
+            }
+        }
+
+        // =================================================================
+        // RENDERING & FILTERING
+        // =================================================================
+
+        function renderTasks(filteredTasks = tasks) {
+            const taskListContainer = document.getElementById('task-list');
+            taskListContainer.innerHTML = '';
+
+            const tasksToRender = filteredTasks.filter(t => !t.deleted);
+
+            if (tasksToRender.length === 0) {
+                taskListContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; padding: 50px;">No tasks found matching the criteria.</p>';
+                return;
+            }
+
+            tasksToRender.forEach(task => {
+                const card = document.createElement('div');
+                card.className = `task-card status-${task.status}`;
+                
+                const deadlineClass = isOverdue(task.deadline) ? 'style="color: var(--danger); font-weight: bold;"' : '';
+
+                card.innerHTML = `
+                    <h3>${task.title}</h3>
+                    <p>${task.description.substring(0, 80)}...</p>
+                    <div class="task-meta">
+                        <span class="priority-${task.priority}">${task.priority.toUpperCase()}</span>
+                        <span style="color: var(--navy);">Assigned: ${task.assignee}</span>
+                    </div>
+                    <p style="font-size: 0.9em; margin-top: 10px;">
+                        Deadline: <span ${deadlineClass}>${task.deadline}</span> | 
+                        Status: <strong>${task.status.toUpperCase().replace('_', ' ')}</strong>
+                    </p>
+                    <button class="btn-secondary" onclick="openTaskModal(${task.id})">View Details</button>
+                    ${currentUserRole === 'admin' ? `<button class="btn-danger" style="margin-left: 10px;" onclick="deleteTask(${task.id})">Delete</button>` : ''}
+                `;
+                taskListContainer.appendChild(card);
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('task-search').value.toLowerCase();
+            const statusFilter = document.getElementById('task-filter-status').value;
+
+            const filtered = tasks.filter(task => {
+                const matchesSearch = task.title.toLowerCase().includes(searchTerm) || task.description.toLowerCase().includes(searchTerm);
+                const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            renderTasks(filtered);
+        }
+
+        // =================================================================
+        // DASHBOARD LOGIC
+        // =================================================================
+
+        function isOverdue(deadline) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const deadlineDate = new Date(deadline);
+            deadlineDate.setHours(0, 0, 0, 0);
+            return deadlineDate < today && tasks.some(t => t.id === tasks.find(t => t.deadline === deadline)?.id && t.status !== 'completed');
+        }
+
+        function updateDashboard() {
+            let total = 0;
+            let pending = 0;
+            let inProgress = 0;
+            let overdue = 0;
+            const assigneeCounts = {};
+
+            tasks.forEach(task => {
+                if (task.deleted) return;
+                total++;
+                
+                // Status counts
+                if (task.status === 'pending') pending++;
+                if (task.status === 'in_progress') inProgress++;
+                if (task.status === 'completed') {} // Don't count completed in active stats
+                if (task.status === 'blocked') {}
+
+                // Overdue check
+                if (isOverdue(task.deadline) && task.status !== 'completed') {
+                    overdue++;
+                }
+
+                // Assignee count
+                assigneeCounts[task.assignee] = (assigneeCounts[task.assignee] || 0) + 1;
+            });
+
+            // Update Stats Boxes
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-in_progress').textContent = inProgress;
+            document.getElementById('stat-overdue').textContent = overdue;
+
+            // Update Assignee Breakdown
+            const breakdownContainer = document.getElementById('assignee-breakdown');
+            breakdownContainer.innerHTML = '';
+            for (const assignee in assigneeCounts) {
+                const count = assigneeCounts[assignee];
+                const box = document.createElement('div');
+                box.className = 'stat-box';
+                box.style.flexBasis = '200px';
+                box.innerHTML = `
+                    <h2 style="color: var(--navy);">${count}</h2>
+                    <p>${assignee}</p>
+                `;
+                breakdownContainer.appendChild(box);
+            }
+        }
+
+        // =================================================================
+        // NOTIFICATION SYSTEM
+        // =================================================================
+
+        function checkNotifications() {
+            const notificationContainer = document.getElementById('notifications');
+            notificationContainer.innerHTML = '';
+            
+            const overdueTasks = tasks.filter(t => 
+                !t.deleted && isOverdue(t.deadline) && t.status !== 'completed'
+            );
+
+            if (overdueTasks.length > 0) {
+                overdueTasks.forEach(task => {
+                    const notif = document.createElement('div');
+                    notif.className = 'notification overdue show';
+                    notif.innerHTML = `<strong>🚨 OVERDUE:</strong> ${task.title} (Due: ${task.deadline}). Assigned to: ${task.assignee}.`;
+                    notificationContainer.appendChild(notif);
+                });
+            } else if (tasks.length > 0) {
+                 const notif = document.createElement('div');
+                 notif.className = 'notification show';
+                 notif.innerHTML = `✅ All tasks are up to date! Keep up the great work.`;
+                 notificationContainer.appendChild(notif);
+            }
+        }
+
+        // =================================================================
+        // INITIALIZATION HOOKS
+        // =================================================================
+
+        // Attach event listeners for filtering
+        document.getElementById('task-search').addEventListener('keyup', applyFilters);
+        document.getElementById('task-filter-status').addEventListener('change', applyFilters);
+
+    </script>
+</body>
+</html>

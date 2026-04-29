@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workflow Viewer</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { color: #333; font-size: 24px; margin-bottom: 5px; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+  
+  .flowchart { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  
+  .node { 
+    border: 2px solid #ddd; border-radius: 8px; padding: 15px 25px; 
+    min-width: 300px; max-width: 500px; text-align: center;
+    background: white; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .node.start { border-color: #4CAF50; background: #E8F5E9; }
+  .node.step { border-color: #2196F3; background: #E3F2FD; }
+  .node.decision { border-color: #FF9800; background: #FFF3E0; }
+  .node.end { border-color: #f44336; background: #FFEBEE; }
+  
+  .node-label { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+  .node-id { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 6px; }
+  .node-desc { font-size: 13px; color: #555; margin: 5px 0; }
+  .node-fields { font-size: 12px; color: #777; margin-top: 8px; }
+  .node-fields span { background: #e0e0e0; padding: 2px 6px; border-radius: 4px; margin: 2px; display: inline-block; }
+  
+  .type-badge {
+    font-size: 10px; text-transform: uppercase; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; color: white; display: inline-block; margin-bottom: 4px;
+  }
+  .start .type-badge { background: #4CAF50; }
+  .step .type-badge { background: #2196F3; }
+  .decision .type-badge { background: #FF9800; }
+  .end .type-badge { background: #f44336; }
+  
+  .arrow { display: flex; flex-direction: column; align-items: center; margin: -4px 0; }
+  .arrow-line { width: 2px; height: 20px; background: #999; }
+  .arrow-head { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #999; }
+  .arrow-label { font-size: 11px; color: #888; margin: 2px 0; font-weight: 500; }
+  
+  .branch {
+    display: flex; justify-content: center; gap: 40px; margin: 0; padding: 0;
+  }
+  .branch-col { display: flex; flex-direction: column; align-items: center; }
+  .branch-arrow { display: flex; flex-direction: column; align-items: center; }
+  
+  .transition-line {
+    width: 2px; height: 15px; background: #FF9800;
+  }
+  .transition-label {
+    font-size: 11px; font-weight: 600; color: #E65100; 
+    background: #FFF3E0; padding: 1px 8px; border-radius: 6px;
+    border: 1px solid #FFE0B2;
+  }
+  
+  .json-panel {
+    background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+    white-space: pre-wrap; overflow-x: auto; margin-top: 20px;
+  }
+  
+  .controls {
+    margin-bottom: 16px; display: flex; gap: 8px; align-items: center;
+  }
+  .controls button {
+    padding: 8px 16px; border: 1px solid #ccc; border-radius: 6px;
+    background: white; cursor: pointer; font-size: 13px;
+  }
+  .controls button:hover { background: #f0f0f0; }
+  .controls button.active { background: #2196F3; color: white; border-color: #1976D2; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📋 Workflow Viewer</h1>
+  <p class="subtitle">Drop your workflow JSON below or load from file</p>
+  
+  <div class="controls">
+    <button id="loadBtn">📂 Load Workflow</button>
+    <button id="toggleJson" class="active">Show JSON</button>
+  </div>
+  
+  <div id="flowchart" class="flowchart"></div>
+  <div id="jsonPanel" class="json-panel"></div>
+</div>
+
+<script>
+function renderWorkflow(workflowJson) {
+  const wf = workflowJson.workflow || workflowJson;
+  const nodes = wf.nodes || wf.steps || [];
+  const container = document.getElementById('flowchart');
+  container.innerHTML = '';
+  
+  // Build node map
+  const nodeMap = {};
+  nodes.forEach(n => { nodeMap[n.id] = n; });
+  
+  function renderNode(node, depth = 0) {
+    if (!node) return;
+    
+    const div = document.createElement('div');
+    div.className = `node ${node.type || 'step'}`;
+    
+    const badge = document.createElement('div');
+    badge.className = 'type-badge';
+    badge.textContent = (node.type || 'step').toUpperCase();
+    div.appendChild(badge);
+    
+    const label = document.createElement('div');
+    label.className = 'node-label';
+    label.textContent = node.label || node.id;
+    div.appendChild(label);
+    
+    const id = document.createElement('div');
+    id.className = 'node-id';
+    id.textContent = node.id;
+    div.appendChild(id);
+    
+    if (node.description) {
+      const desc = document.createElement('div');
+      desc.className = 'node-desc';
+      desc.textContent = node.description;
+      div.appendChild(desc);
+    }
+    
+    if (node.data_fields && node.data_fields.length > 0) {
+      const fieldsDiv = document.createElement('div');
+      fieldsDiv.className = 'node-fields';
+      const fields = node.data_fields;
+      if (fields.length > 0 && typeof fields[0] === 'object') {
+        fields.forEach(f => {
+          const span = document.createElement('span');
+          span.textContent = f.name || JSON.stringify(f);
+          fieldsDiv.appendChild(span);
+        });
+      } else {
+        fields.forEach(f => {
+          const span = document.createElement('span');
+          span.textContent = f;
+          fieldsDiv.appendChild(span);
+        });
+      }
+      div.appendChild(fieldsDiv);
+    }
+    
+    container.appendChild(div);
+    
+    // Decision node: render branches
+    if (node.type === 'decision' && node.transitions) {
+      const branchDiv = document.createElement('div');
+      branchDiv.className = 'branch';
+      
+      node.transitions.forEach(t => {
+        const col = document.createElement('div');
+        col.className = 'branch-col';
+        
+        const arr = document.createElement('div');
+        arr.className = 'branch-arrow';
+        
+        const label = document.createElement('div');
+        label.className = 'transition-label';
+        label.textContent = t.condition || '?';
+        arr.appendChild(label);
+        
+        const line = document.createElement('div');
+        line.style.cssText = 'width:2px;height:15px;background:#999;';
+        arr.appendChild(line);
+        
+        const head = document.createElement('div');
+        head.style.cssText = 'width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #999;';
+        arr.appendChild(head);
+        
+        col.appendChild(arr);
+        col.appendChild(renderNodeInline(nodeMap[t.target]));
+        branchDiv.appendChild(col);
+      });
+      
+      container.appendChild(branchDiv);
+    }
+    // Step node: simple arrow
+    else if (node.next) {
+      const arr = document.createElement('div');
+      arr.className = 'arrow';
+      const line = document.createElement('div');
+      line.className = 'arrow-line';
+      arr.appendChild(line);
+      const head = document.createElement('div');
+      head.className = 'arrow-head';
+      arr.appendChild(head);
+      container.appendChild(arr);
+      
+      renderNode(nodeMap[node.next], depth + 1);
+    }
+  }
+  
+  // Start from first node
+  const start = nodeMap[wf.start] || nodes[0];
+  renderNode(start);
+  
+  // Show JSON
+  const panel = document.getElementById('jsonPanel');
+  panel.textContent = JSON.stringify(workflowJson, null, 2);
+}
+
+function renderNodeInline(node) {
+  if (!node) return document.createElement('div');
+  const div = document.createElement('div');
+  div.className = `node ${node.type || 'step'}`;
+  div.style.cssText = 'min-width:250px;padding:10px 18px;';
+  
+  const badge = document.createElement('div');
+  badge.className = 'type-badge';
+  badge.textContent = (node.type || 'step').toUpperCase();
+  div.appendChild(badge);
+  
+  const label = document.createElement('div');
+  label.className = 'node-label';
+  label.textContent = node.label || node.id;
+  div.appendChild(label);
+  
+  const id = document.createElement('div');
+  id.className = 'node-id';
+  id.textContent = node.id;
+  div.appendChild(id);
+  
+  return div;
+}
+
+// Load from file
+document.getElementById('loadBtn').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e2) {
+      try {
+        const data = JSON.parse(e2.target.result);
+        renderWorkflow(data);
+      } catch(err) {
+        alert('Invalid JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+});
+
+// Toggle JSON panel
+document.getElementById('toggleJson').addEventListener('click', function() {
+  const panel = document.getElementById('jsonPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  this.classList.toggle('active');
+});
+
+// Auto-load embedded workflow
+
+const WORKFLOW = {
+  "nodes": [
+    {
+      "id": "1",
+      "type": "step",
+      "label": "Create Task",
+      "description": "Admin fills in task details: title, description, priority, assignee, deadline.",
+      "data_fields": [
+        "title",
+        "description",
+        "priority",
+        "assignee",
+        "deadline"
+      ],
+      "next": "2",
+      "transitions": []
+    },
+    {
+      "id": "2",
+      "type": "decision",
+      "label": "Validate Task",
+      "description": "Check required fields and priority is high/medium/low.",
+      "data_fields": [],
+      "next": null,
+      "transitions": [
+        {
+          "condition": "All required fields present and priority valid",
+          "target": "3"
+        },
+        {
+          "condition": "Missing field or invalid priority",
+          "target": "4"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "type": "step",
+      "label": "Save Task",
+      "description": "Persist the new task in the database.",
+      "data_fields": [],
+      "next": "5",
+      "transitions": []
+    },
+    {
+      "id": "4",
+      "type": "step",
+      "label": "Show Validation Error",
+      "description": "Display error messages to admin and allow re-entry.",
+      "data_fields": [],
+      "next": "1",
+      "transitions": []
+    },
+    {
+      "id": "5",
+      "type": "step",
+      "label": "Notify Assignee",
+      "description": "Automatically notify the assigned staff member about the new task.",
+      "data_fields": [],
+      "next": "6",
+      "transitions": []
+    },
+    {
+      "id": "6",
+      "type": "step",
+      "label": "Staff Select Task",
+      "description": "Staff views assigned tasks and selects one to work on.",
+      "data_fields": [
+        "task_id"
+      ],
+      "next": "7",
+      "transitions": []
+    },
+    {
+      "id": "7",
+      "type": "step",
+      "label": "Update Status",
+      "description": "Staff chooses new status: pending \u2192 in_progress \u2192 completed (or blocked).",
+      "data_fields": [
+        "new_status"
+      ],
+      "next": "8",
+      "transitions": []
+    },
+    {
+      "id": "8",
+      "type": "decision",
+      "label": "Validate Status Transition",
+      "description": "Ensure the requested status change is allowed from current status.",
+      "data_fields": [],
+      "next": null,
+      "transitions": [
+        {
+          "condition": "Transition allowed",
+          "target": "9"
+        },
+        {
+          "condition": "Transition not allowed",
+          "target": "7"
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "type": "step",
+      "label": "Update Task Status",
+      "description": "Persist the new status in the database.",
+      "data_fields": [],
+      "next": "10",
+      "transitions": []
+    },
+    {
+      "id": "10",
+      "type": "step",
+      "label": "Notify Admin",
+      "description": "Automatically notify admin when task status changes.",
+      "data_fields": [],
+      "next": "11",
+      "transitions": []
+    },
+    {
+      "id": "11",
+      "type": "step",
+      "label": "Add Comment",
+      "description": "Staff adds a note to the task (optional).",
+      "data_fields": [
+        "comment_text"
+      ],
+      "next": "12",
+      "transitions": []
+    },
+    {
+      "id": "12",
+      "type": "decision",
+      "label": "Check Overdue",
+      "description": "Determine if the task deadline has passed based on current date.",
+      "data_fields": [],
+      "next": null,
+      "transitions": [
+        {
+          "condition": "Task overdue",
+          "target": "13"
+        },
+        {
+          "condition": "Task not overdue",
+          "target": "14"
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "type": "step",
+      "label": "Notify Overdue",
+      "description": "Send automatic notification about overdue task to admin and assignee.",
+      "data_fields": [],
+      "next": "14",
+      "transitions": []
+    },
+    {
+      "id": "14",
+      "type": "step",
+      "label": "View Dashboard",
+      "description": "Admin views dashboard with total tasks, by status, by assignee, overdue filter.",
+      "data_fields": [
+        "filter_option"
+      ],
+      "next": "15",
+      "transitions": []
+    },
+    {
+      "id": "15",
+      "type": "step",
+      "label": "View All Tasks",
+      "description": "Admin views the full task list with search and filter options.",
+      "data_fields": [
+        "search_term",
+        "filter_status",
+        "filter_priority"
+      ],
+      "next": "16"
+    },
+    {
+      "id": "16",
+      "type": "decision",
+      "label": "Select Action on Task",
+      "description": "Admin chooses what to do with the selected task: edit details, reassign, change dates, or delete.",
+      "data_fields": [
+        "selected_task_id",
+        "action"
+      ],
+      "transitions": [
+        {
+          "condition": "Edit task details",
+          "target": "17"
+        },
+        {
+          "condition": "Reassign task",
+          "target": "18"
+        },
+        {
+          "condition": "Change dates",
+          "target": "19"
+        },
+        {
+          "condition": "Delete task",
+          "target": "20"
+        },
+        {
+          "condition": "Back to dashboard",
+          "target": "14"
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "type": "step",
+      "label": "Edit Task Details",
+      "description": "Admin modifies task title, description, or priority.",
+      "data_fields": [
+        "title",
+        "description",
+        "priority"
+      ],
+      "next": "21"
+    },
+    {
+      "id": "18",
+      "type": "step",
+      "label": "Reassign Task",
+      "description": "Admin changes the assignee of the task to another staff member.",
+      "data_fields": [
+        "new_assignee",
+        "reassign_reason"
+      ],
+      "next": "21"
+    },
+    {
+      "id": "19",
+      "type": "step",
+      "label": "Change Task Dates",
+      "description": "Admin modifies the deadline and optionally sets a new start date.",
+      "data_fields": [
+        "new_deadline",
+        "new_start_date",
+        "change_reason"
+      ],
+      "next": "21"
+    },
+    {
+      "id": "20",
+      "type": "step",
+      "label": "Delete Task Confirmation",
+      "description": "Admin confirms deletion with a reason before removing the task.",
+      "data_fields": [
+        "confirm_delete",
+        "delete_reason"
+      ],
+      "next": "22"
+    },
+    {
+      "id": "21",
+      "type": "step",
+      "label": "Save Changes & Notify",
+      "description": "Persist the changes and notify the affected staff member about the update.",
+      "data_fields": [
+        "change_notes"
+      ],
+      "next": "14"
+    },
+    {
+      "id": "22",
+      "type": "step",
+      "label": "Delete Task & Notify",
+      "description": "Remove the task and send notification to the previous assignee.",
+      "data_fields": [
+        "notification_note"
+      ],
+      "next": "14"
+    }
+  ]
+};
+window.addEventListener('DOMContentLoaded', () => renderWorkflow(WORKFLOW));
+
+// Check for workflow in URL hash
+if (window.location.hash) {
+  try {
+    const data = JSON.parse(decodeURIComponent(window.location.hash.slice(1)));
+    renderWorkflow(data);
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

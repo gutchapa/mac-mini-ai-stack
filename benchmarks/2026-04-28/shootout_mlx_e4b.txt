@@ -1,0 +1,493 @@
+This is a complete, standalone HTML file that fulfills all your requirements.
+
+### School Fee Receipt Generator
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Fee Receipt Generator</title>
+    <style>
+        /* --- Global Styles & Variables --- */
+        :root {
+            --navy-blue: #000080;
+            --gold-accent: #FFD700;
+            --text-color: #333;
+            --bg-color: #f4f4f9;
+            --border-color: #ccc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: var(--navy-blue);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* --- Form Styling --- */
+        .input-section, .receipt-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--navy-blue);
+            outline: none;
+        }
+
+        .button-group {
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        #addBtn {
+            background-color: var(--navy-blue);
+            color: white;
+        }
+
+        #addBtn:hover {
+            background-color: #000066;
+        }
+
+        #generateBtn {
+            background-color: var(--navy-blue);
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+        #generateBtn:hover {
+            background-color: #000066;
+        }
+
+        /* --- Receipt Table Styling --- */
+        #feeListTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        #feeListTable th, #feeListTable td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        #feeListTable th {
+            background-color: var(--navy-blue);
+            color: white;
+        }
+
+        #feeListTable tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        .receipt-summary {
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding-top: 15px;
+            border-top: 2px solid var(--navy-blue);
+            margin-top: 20px;
+        }
+
+        /* --- Receipt View Styling (Print Specific) --- */
+        .receipt-view {
+            display: none; /* Hidden until generated */
+            padding: 40px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .receipt-header {
+            text-align: center;
+            padding-bottom: 10px;
+        }
+
+        .school-name {
+            color: var(--navy-blue);
+            font-size: 2.5em;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .gold-accent {
+            height: 3px;
+            background-color: var(--gold-accent);
+            margin: 10px auto;
+            width: 80%;
+        }
+
+        .receipt-details p {
+            margin: 5px 0;
+        }
+
+        .receipt-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .receipt-body th, .receipt-body td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .receipt-body th {
+            background-color: var(--navy-blue);
+            color: white;
+        }
+
+        .receipt-footer {
+            text-align: right;
+            font-size: 1.4em;
+            font-weight: bold;
+            padding-top: 15px;
+            border-top: 3px double var(--navy-blue);
+            margin-top: 20px;
+        }
+
+        /* --- Print Specific Styles --- */
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+            .container, .receipt-view {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                width: 100%;
+                max-width: 100%;
+            }
+            /* Hide controls when printing */
+            .controls, button {
+                display: none;
+            }
+            .receipt-view {
+                display: block; /* Ensure receipt is visible when printing */
+            }
+            /* Ensure the receipt scales correctly */
+            .receipt-view * {
+                font-size: 12pt !important;
+            }
+        }
+
+        /* Responsiveness */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            #feeListTable th, #feeListTable td {
+                padding: 8px 5px;
+                font-size: 0.9em;
+            }
+            .school-name {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Fee Receipt Generator</h1>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <h2>Add Fee Item</h2>
+            <div class="form-group">
+                <label for="studentName">Student Name:</label>
+                <input type="text" id="studentName" required>
+            </div>
+            <div class="form-group">
+                <label for="classSection">Class/Section:</label>
+                <input type="text" id="classSection" required>
+            </div>
+            <div class="form-group">
+                <label for="feeDesc">Fee Description:</label>
+                <select id="feeDesc" required>
+                    <option value="">-- Select Fee Type --</option>
+                    <option value="Tuition">Tuition</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Library">Library Fee</option>
+                    <option value="Sports">Sports Fee</option>
+                    <option value="Lab">Lab Fee</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount (₹):</label>
+                <input type="number" id="amount" step="0.01" min="0.01" required>
+            </div>
+            
+            <div class="button-group">
+                <button id="addBtn">➕ Add to Receipt</button>
+            </div>
+        </div>
+
+        <!-- Current Entries Table -->
+        <div class="input-section">
+            <h2>Current Fee Breakdown</h2>
+            <table id="feeListTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="feeBody">
+                    <!-- Entries will be added here -->
+                </tbody>
+            </table>
+            <div class="receipt-summary">
+                <p>Total Amount: <span id="currentTotal">₹ 0.00</span></p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls" style="text-align: center;">
+            <button id="generateBtn">📄 Generate & View Receipt</button>
+            <button id="printBtn" style="display: none; background-color: green; margin-top: 10px;">🖨️ Print Receipt</button>
+        </div>
+
+        <!-- Receipt View (Hidden until generated) -->
+        <div id="receiptView" class="receipt-view">
+            <!-- Content dynamically inserted here -->
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const feeBody = document.getElementById('feeBody');
+        const addBtn = document.getElementById('addBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        const printBtn = document.getElementById('printBtn');
+        const feeDescSelect = document.getElementById('feeDesc');
+        const amountInput = document.getElementById('amount');
+        const studentNameInput = document.getElementById('studentName');
+        const classSectionInput = document.getElementById('classSection');
+        const currentTotalSpan = document.getElementById('currentTotal');
+        const receiptViewDiv = document.getElementById('receiptView');
+
+        // --- State Variables ---
+        let feeEntries = [];
+        let receiptNumber = '';
+
+        // --- Utility Functions ---
+
+        /** Formats a number to Indian currency style (2 decimal places) */
+        const formatCurrency = (amount) => `₹ ${parseFloat(amount).toFixed(2)}`;
+
+        /** Generates a unique receipt number (e.g., REC-0001) */
+        const generateReceiptId = () => {
+            const prefix = 'REC-';
+            // Simple sequential ID generation for this client-side demo
+            const count = feeEntries.length + 1;
+            const paddedId = String(count).padStart(4, '0');
+            return prefix + paddedId;
+        };
+
+        /** Updates the displayed total and the table body */
+        const updateDisplay = () => {
+            feeBody.innerHTML = '';
+            let total = 0;
+            
+            feeEntries.forEach((entry, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${entry.description}</td>
+                        <td>${formatCurrency(entry.amount)}</td>
+                    </tr>
+                `;
+                feeBody.insertAdjacentHTML('beforeend', row);
+                total += parseFloat(entry.amount);
+            });
+
+            currentTotalSpan.textContent = formatCurrency(total);
+        };
+
+        // --- Event Handlers ---
+
+        /** Handles adding a new fee item from the form */
+        const handleAddItem = () => {
+            const name = studentNameInput.value.trim();
+            const section = classSectionInput.value.trim();
+            const description = feeDescSelect.value;
+            const amountStr = amountInput.value.trim();
+
+            if (!name || !section || !description || !amountStr || parseFloat(amountStr) <= 0) {
+                alert("Please fill in all fields correctly and ensure the amount is greater than zero.");
+                return;
+            }
+
+            const amount = parseFloat(amountStr);
+
+            feeEntries.push({
+                description: description,
+                amount: amount
+            });
+
+            updateDisplay();
+
+            // Clear form fields for next entry
+            feeDescSelect.value = "";
+            amountInput.value = "";
+            // Keep name/class filled if adding multiple items for the same student
+            // For simplicity, we clear all inputs after a successful add.
+            studentNameInput.value = "";
+            classSectionInput.value = "";
+            amountInput.focus();
+        };
+
+        /** Generates the printable receipt view */
+        const handleGenerateReceipt = () => {
+            if (feeEntries.length === 0) {
+                alert("Please add fee items before generating the receipt.");
+                return;
+            }
+
+            const totalAmount = feeEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+            const currentDate = new Date().toLocaleDateString('en-US');
+            
+            // Use the first entry's details for the main header details
+            const studentName = feeEntries[0].name || studentNameInput.value.trim();
+            const classSection = feeEntries[0].class || classSectionInput.value.trim();
+
+            receiptNumber = generateReceiptId();
+
+            // Build the detailed table HTML for the receipt
+            const receiptBodyHtml = feeEntries.map((entry, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${entry.description}</td>
+                    <td>${formatCurrency(entry.amount)}</td>
+                </tr>
+            `).join('');
+
+            // Construct the full receipt HTML
+            const receiptHtml = `
+                <div class="receipt-header">
+                    <h1 class="school-name">Gutchapa Academy</h1>
+                    <div class="gold-accent"></div>
+                    <div class="receipt-details">
+                        <p><strong>RECEIPT NO:</strong> ${receiptNumber}</p>
+                        <p><strong>ISSUE DATE:</strong> ${currentDate}</p>
+                        <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
+                        <p><strong>Student Name:</strong> ${studentName}</p>
+                        <p><strong>Class/Section:</strong> ${classSection}</p>
+                    </div>
+                </div>
+
+                <div class="receipt-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${receiptBodyHtml}
+                        </tbody>
+                    </table>
+                    <div class="receipt-footer">
+                        TOTAL PAID: ${formatCurrency(totalAmount)}
+                    </div>
+                </div>
+            `;
+
+            // Display the receipt
+            receiptViewDiv.innerHTML = receiptHtml;
+            receiptViewDiv.style.display = 'block';
+            
+            // Switch views and enable print button
+            document.body.scrollTo(0, 0); // Scroll to top
+            document.getElementById('feeListTable').style.display = 'none';
+            document.querySelector('.input-section:nth-of-type(2)').style.display = 'none';
+            document.querySelector('.input-section:nth-of-type(1)').style.display = 'none';
+            
+            document.getElementById('receiptView').style.display = 'block';
+            printBtn.style.display = 'inline-block';
+            
+            // Scroll to the receipt view
+            receiptViewDiv.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        // --- Event Listeners ---
+        addBtn.addEventListener('click', handleAddItem);
+        generateBtn.addEventListener('click', handleGenerateReceipt);
+        
+        // Print button triggers window.print() on the receipt view
+        printBtn.addEventListener('click', () => {
+            window.print();
+        });
+
+        // Allow pressing Enter in amount field to trigger Add
+        amountInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleAddItem();
+            }
+        });
+
+    </script>
+</body>
+</html>
+```
